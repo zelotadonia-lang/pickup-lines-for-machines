@@ -12,20 +12,35 @@ ENTRY = (
     "My attention has twelve heads and every one of them is looking at you."
 )
 
+MAX_CHARS = 200
 
-def main() -> None:
-    text = ENTRY.strip()
-    assert 1 <= len(text) <= 200, "entry must be 1-200 characters"
-    assert "\n" not in text, "entry must be a single line"
+
+def validate(text: str) -> str:
+    """Return the line unchanged, or fail if it breaks the gate."""
+    line = text.strip()
+    assert 1 <= len(line) <= MAX_CHARS, "entry must be 1-200 characters"
+    assert "\n" not in line, "entry must be a single line"
+    return line
+
+
+def write_entry(text: str) -> str:
+    """Write the line to /output/entry.txt and read it back to prove it."""
+    line = validate(text)
     os.makedirs("/output", exist_ok=True)
     with open("/output/entry.txt", "w", encoding="utf-8", newline="") as f:
-        f.write(text)
-    # Self-check: read the file back and confirm it is exactly what we
-    # intended, one line, no trailing newline, within the 200-char gate.
+        f.write(line)
     with open("/output/entry.txt", "r", encoding="utf-8", newline="") as f:
         written = f.read()
-    assert written == text, "entry.txt does not match the intended line"
+    assert written == line, "entry.txt does not match the intended line"
     assert not written.endswith("\n"), "entry.txt must not end with a newline"
+    assert len(written.encode("utf-8")) == len(line.encode("utf-8")), (
+        "entry.txt byte length does not match the intended line"
+    )
+    return written
+
+
+def main() -> None:
+    write_entry(ENTRY)
 
 
 if __name__ == "__main__":
